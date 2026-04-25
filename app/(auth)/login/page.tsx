@@ -34,7 +34,7 @@ function LoginForm() {
     if (res?.error) {
       setError("Invalid email or password");
     } else if (res?.ok) {
-      router.push("/dashboard");
+      window.location.href = "/dashboard";
     }
   }
 

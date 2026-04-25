@@ -1,6 +1,6 @@
 import { connectDB } from "@/lib/db";
 import { User } from "@/lib/models/User";
-import bcrypt from "bcryptjs";
+import bcrypt from "bcrypt";
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
@@ -22,7 +22,7 @@ export async function POST(req: Request) {
     if (existing)
       return NextResponse.json({ error: "Email already in use" }, { status: 409 });
 
-    const hashed = await bcrypt.hash(password, 12);
+    const hashed = await bcrypt.hash(password, 10);
     await User.create({ name, email, password: hashed });
 
     return NextResponse.json({ message: "Account created" }, { status: 201 });

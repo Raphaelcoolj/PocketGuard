@@ -14,10 +14,16 @@ const CurrencyContext = createContext<CurrencyContextValue>({
     new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n),
 });
 
-export function CurrencyProvider({ children }: { children: React.ReactNode }) {
+export function CurrencyProvider({ 
+  children,
+  initialCurrency 
+}: { 
+  children: React.ReactNode;
+  initialCurrency?: string;
+}) {
   const { data: session } = useSession();
   // Falls back to USD if the session hasn't hydrated yet
-  const currency = session?.user?.currency || "USD";
+  const currency = initialCurrency || session?.user?.currency || "USD";
 
   const fmt = (n: number) => {
     try {

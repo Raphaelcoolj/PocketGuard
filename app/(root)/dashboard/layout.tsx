@@ -15,7 +15,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   if (!dbUser?.onboardingComplete) redirect("/onboarding");
 
   return (
-    <CurrencyProvider>
+    <CurrencyProvider initialCurrency={(dbUser as any)?.currency}>
       {/* Desktop layout */}
       <div className="flex h-screen bg-background overflow-hidden">
         <Sidebar user={session.user} role={(dbUser as any)?.role} />
