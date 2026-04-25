@@ -36,28 +36,28 @@ export async function GET(req: Request) {
     ]);
 
     const monthlyIncome = transactions
-      .filter((t) => t.type === "income")
-      .reduce((sum, t) => sum + t.amount, 0);
+      .filter((t: any) => t.type === "income")
+      .reduce((sum: number, t: any) => sum + t.amount, 0);
 
     const monthlyExpenses = transactions
-      .filter((t) => t.type === "expense")
-      .reduce((sum, t) => sum + t.amount, 0);
+      .filter((t: any) => t.type === "expense")
+      .reduce((sum: number, t: any) => sum + t.amount, 0);
 
     const totalIncome = allTime
-      .filter((t) => t.type === "income")
-      .reduce((sum, t) => sum + t.amount, 0);
+      .filter((t: any) => t.type === "income")
+      .reduce((sum: number, t: any) => sum + t.amount, 0);
 
     const totalExpenses = allTime
-      .filter((t) => t.type === "expense")
-      .reduce((sum, t) => sum + t.amount, 0);
+      .filter((t: any) => t.type === "expense")
+      .reduce((sum: number, t: any) => sum + t.amount, 0);
 
     const categoryMap: Record<string, {
       name: string; icon: string; color: string; total: number;
     }> = {};
 
     transactions
-      .filter((t) => t.type === "expense" && t.categoryId)
-      .forEach((t) => {
+      .filter((t: any) => t.type === "expense" && t.categoryId)
+      .forEach((t: any) => {
         const cat = t.categoryId as any;
         if (!categoryMap[cat._id]) {
           categoryMap[cat._id] = {
@@ -74,18 +74,27 @@ export async function GET(req: Request) {
       .sort((a, b) => b.total - a.total)
       .slice(0, 5);
 
+    // FIXED: Typed the dailyMap keys strictly
     const dailyMap: Record<string, { income: number; expense: number }> = {};
-    transactions.forEach((t) => {
+    
+    transactions.forEach((t: any) => {
       const day = new Date(t.date).toLocaleDateString("en-US", {
         month: "short",
         day: "numeric",
       });
+      
       if (!dailyMap[day]) dailyMap[day] = { income: 0, expense: 0 };
-      dailyMap[day][t.type] += t.amount;
+      
+      // FIX: Explicitly cast t.type to the allowed keys to satisfy TypeScript
+      if (t.type === "income" || t.type === "expense") {
+        dailyMap[day][t.type as "income" | "expense"] += t.amount;
+      }
     });
 
     const dailyChart = Object.entries(dailyMap)
       .map(([date, values]) => ({ date, ...values }))
+      // Sort by date to ensure the chart flows left-to-right
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
       .slice(-7);
 
     return NextResponse.json({
