@@ -26,7 +26,7 @@ export default auth((req) => {
   }
 
   // Block non-admins from /admin
-  if (pathname.startsWith("/admin") && req.auth?.role !== "admin") {
+  if (pathname.startsWith("/admin") && req.auth?.user?.role !== "admin") {
     return Response.redirect(new URL("/dashboard", req.nextUrl));
   }
 });
