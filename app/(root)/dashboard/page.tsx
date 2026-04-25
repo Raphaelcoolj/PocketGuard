@@ -42,26 +42,29 @@ export default function DashboardPage() {
   const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [year, setYear] = useState(new Date().getFullYear());
 
-  useEffect(() => {
-  setLoading(true);
-  fetch(`/api/summary?month=${month}&year=${year}`)
-    .then((r) => r.json())
-    .then((data) => {
-      if (data.error) {
-        console.error("Summary API error:", data.error);
-        setLoading(false);
-        return;
-      }
-      setSummary(data);
-      setLoading(false);
-    })
-    .catch((err) => {
-      console.error("Fetch error:", err);
-      setLoading(false);
-    });
-}, [month, year]);
-
   const { fmt } = useCurrency();
+
+  // Helper to safely format chart values and satisfy TypeScript build checks
+  const chartFmt = (v: any) => fmt(Number(v) || 0);
+
+  useEffect(() => {
+    setLoading(true);
+    fetch(`/api/summary?month=${month}&year=${year}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.error) {
+          console.error("Summary API error:", data.error);
+          setLoading(false);
+          return;
+        }
+        setSummary(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Fetch error:", err);
+        setLoading(false);
+      });
+  }, [month, year]);
 
   const fmtDate = (d: string) =>
     new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" });
@@ -189,9 +192,9 @@ export default function DashboardPage() {
                   </linearGradient>
                 </defs>
                 <XAxis dataKey="date" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-                <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} tickFormatter={(v) => fmt(v)} />
+                <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} tickFormatter={chartFmt} />
                 <Tooltip
-                  formatter={(value: number) => fmt(value)}
+                  formatter={(value: any) => chartFmt(value)}
                   contentStyle={{
                     backgroundColor: "var(--card)",
                     border: "1px solid var(--border)",
@@ -232,7 +235,7 @@ export default function DashboardPage() {
                     ))}
                   </Pie>
                   <Tooltip
-                    formatter={(value: number) => fmt(value)}
+                    formatter={(value: any) => chartFmt(value)}
                     contentStyle={{
                       backgroundColor: "var(--card)",
                       border: "1px solid var(--border)",
