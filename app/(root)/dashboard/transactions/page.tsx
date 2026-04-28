@@ -101,7 +101,7 @@ export default function TransactionsPage() {
         </div>
         <button
           onClick={() => setShowModal(true)}
-          className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition"
+          className="flex items-center gap-2 bg-primary text-primary-foreground px-2 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition"
         >
           <Plus size={16} />
           Add Transaction
