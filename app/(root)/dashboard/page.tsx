@@ -124,7 +124,7 @@ export default function DashboardPage() {
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-15 sm:mt-0 md:mt-4">
         <div>
           <h1 className="text-2xl font-bold">Overview</h1>
           <p className="text-muted-foreground text-sm mt-0.5">

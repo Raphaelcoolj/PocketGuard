@@ -92,7 +92,7 @@ export default function TransactionsPage() {
   return (
     <div className="p-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 mt-15 sm:mt-0 md:mt-4">
         <div>
           <h1 className="text-2xl font-bold">Transactions</h1>
           <p className="text-muted-foreground text-sm mt-0.5">
