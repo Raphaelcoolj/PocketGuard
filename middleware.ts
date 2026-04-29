@@ -9,6 +9,9 @@ export default auth((req) => {
   if (
     pathname.startsWith("/api/") ||
     pathname.startsWith("/_next/") ||
+    pathname.startsWith("/assets/") ||
+    pathname === "/manifest.json" ||
+    pathname === "/sw.js" ||
     pathname === "/favicon.ico"
   ) {
     return;
@@ -32,5 +35,5 @@ export default auth((req) => {
 });
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|manifest.json|sw.js|assets).*)"],
 };
