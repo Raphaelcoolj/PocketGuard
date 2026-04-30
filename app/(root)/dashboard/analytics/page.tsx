@@ -72,13 +72,13 @@ export default function AnalyticsPage() {
   const { monthlyData, savingsData, spendingByCategory, incomeSources, biggestExpenses, stats } = data;
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 sm:p-6 space-y-6 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between mt-15 sm:mt-0 md:mt-4">
+      <div className="flex items-center justify-between mt-12 sm:mt-0">
         <div>
-          <h1 className="text-2xl font-bold">Analytics</h1>
-          <p className="text-muted-foreground text-sm mt-0.5">
-            Your financial insights for {year}
+          <h1 className="text-2xl font-bold tracking-tight">Analytics</h1>
+          <p className="text-muted-foreground text-sm">
+            Financial insights for {year}
           </p>
         </div>
         <select
@@ -92,8 +92,8 @@ export default function AnalyticsPage() {
         </select>
       </div>
 
-      {/* Stat Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* Stat Cards - Added min-w-0 to handle flex/grid overflow */}
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
         {[
           { label: "Total Income", value: fmt(stats.totalIncome), color: "text-green-500" },
           { label: "Total Expenses", value: fmt(stats.totalExpenses), color: "text-red-500" },
@@ -102,92 +102,108 @@ export default function AnalyticsPage() {
           { label: "Avg Monthly Spend", value: fmt(stats.avgMonthlyExpense), color: "text-orange-500" },
           { label: "Total Transactions", value: stats.totalTransactions.toString(), color: "text-purple-500" },
         ].map(({ label, value, color }) => (
-          <div key={label} className="bg-card border border-border rounded-xl p-4">
-            <p className="text-xs text-muted-foreground mb-1">{label}</p>
-            <p className={`text-xl font-bold ${color}`}>{value}</p>
+          <div key={label} className="bg-card border border-border rounded-xl p-3 sm:p-4 min-w-0 shadow-sm">
+            <p className="text-[10px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1 truncate">{label}</p>
+            <p className={`text-base sm:text-xl font-bold truncate ${color}`}>{value}</p>
           </div>
         ))}
       </div>
 
       {/* Income vs Expenses Bar Chart */}
-      <div className="bg-card border border-border rounded-xl p-5">
-        <h2 className="text-sm font-semibold mb-4">Monthly Income vs Expenses</h2>
-        <ResponsiveContainer width="100%" height={240}>
-          <BarChart data={monthlyData} barGap={4}>
-            <XAxis dataKey="month" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-            <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} tickFormatter={chartFmt} />
-            <Tooltip formatter={(v: any) => chartFmt(v)} contentStyle={TOOLTIP_STYLE} />
-            <Legend wrapperStyle={{ fontSize: "12px" }} />
-            <Bar dataKey="income" name="Income" fill="#22c55e" radius={[4, 4, 0, 0]} />
-            <Bar dataKey="expense" name="Expenses" fill="#ef4444" radius={[4, 4, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
+      <div className="bg-card border border-border rounded-xl p-4 sm:p-5 shadow-sm">
+        <h2 className="text-sm font-semibold mb-6">Monthly Income vs Expenses</h2>
+        <div className="h-[240px] w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={monthlyData} barGap={4} margin={{ left: -20, right: 10 }}>
+              <XAxis dataKey="month" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} dy={10} />
+              <YAxis 
+                tick={{ fontSize: 10 }} 
+                tickLine={false} 
+                axisLine={false} 
+                tickFormatter={chartFmt}
+                width={80} 
+              />
+              <Tooltip formatter={(v: any) => chartFmt(v)} contentStyle={TOOLTIP_STYLE} cursor={{fill: 'var(--muted)', opacity: 0.4}} />
+              <Legend wrapperStyle={{ fontSize: "12px", paddingTop: "20px" }} />
+              <Bar dataKey="income" name="Income" fill="#22c55e" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="expense" name="Expenses" fill="#ef4444" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
       </div>
 
       {/* Savings Trend */}
-      <div className="bg-card border border-border rounded-xl p-5">
-        <h2 className="text-sm font-semibold mb-4">Monthly Savings Trend</h2>
-        <ResponsiveContainer width="100%" height={200}>
-          <AreaChart data={savingsData}>
-            <defs>
-              <linearGradient id="savingsGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#6366f1" stopOpacity={0.2} />
-                <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <XAxis dataKey="month" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-            <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} tickFormatter={chartFmt} />
-            <Tooltip
-              formatter={(v: any) => chartFmt(v)}
-              contentStyle={TOOLTIP_STYLE}
-            />
-            <Area
-              type="monotone"
-              dataKey="savings"
-              name="Savings"
-              stroke="#6366f1"
-              strokeWidth={2}
-              fill="url(#savingsGrad)"
-            />
-          </AreaChart>
-        </ResponsiveContainer>
+      <div className="bg-card border border-border rounded-xl p-4 sm:p-5 shadow-sm">
+        <h2 className="text-sm font-semibold mb-6">Monthly Savings Trend</h2>
+        <div className="h-[200px] w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={savingsData} margin={{ left: -20, right: 10 }}>
+              <defs>
+                <linearGradient id="savingsGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#6366f1" stopOpacity={0.2} />
+                  <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <XAxis dataKey="month" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} dy={10} />
+              <YAxis 
+                tick={{ fontSize: 10 }} 
+                tickLine={false} 
+                axisLine={false} 
+                tickFormatter={chartFmt}
+                width={80}
+              />
+              <Tooltip formatter={(v: any) => chartFmt(v)} contentStyle={TOOLTIP_STYLE} />
+              <Area
+                type="monotone"
+                dataKey="savings"
+                name="Savings"
+                stroke="#6366f1"
+                strokeWidth={2}
+                fill="url(#savingsGrad)"
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
       </div>
 
       {/* Spending by Category + Income Sources */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Spending Breakdown */}
-        <div className="bg-card border border-border rounded-xl p-5">
+        <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
           <h2 className="text-sm font-semibold mb-4">Spending Breakdown</h2>
           {spendingByCategory.length === 0 ? (
-            <p className="text-muted-foreground text-sm">No expense data</p>
+            <p className="text-muted-foreground text-sm py-10 text-center">No expense data</p>
           ) : (
             <>
-              <ResponsiveContainer width="100%" height={180}>
-                <PieChart>
-                  <Pie
-                    data={spendingByCategory}
-                    dataKey="total"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={50}
-                    outerRadius={80}
-                    strokeWidth={0}
-                  >
-                    {spendingByCategory.map((entry, i) => (
-                      <Cell key={i} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(v: any) => chartFmt(v)} contentStyle={TOOLTIP_STYLE} />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="space-y-2 mt-2">
+              <div className="h-[180px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={spendingByCategory}
+                      dataKey="total"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={50}
+                      outerRadius={70}
+                      paddingAngle={2}
+                      strokeWidth={0}
+                    >
+                      {spendingByCategory.map((entry, i) => (
+                        <Cell key={i} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(v: any) => chartFmt(v)} contentStyle={TOOLTIP_STYLE} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="space-y-2 mt-4">
                 {spendingByCategory.map((cat) => (
                   <div key={cat.name} className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: cat.color }} />
-                    <span className="text-xs flex-1 truncate">{cat.icon} {cat.name}</span>
-                    <span className="text-xs text-muted-foreground">{cat.pct}%</span>
-                    <span className="text-xs font-medium">{fmt(cat.total)}</span>
+                    <span className="text-xs flex-1 truncate font-medium">{cat.icon} {cat.name}</span>
+                    <span className="text-[10px] text-muted-foreground font-mono">{cat.pct}%</span>
+                    <span className="text-xs font-semibold">{fmt(cat.total)}</span>
                   </div>
                 ))}
               </div>
@@ -196,37 +212,40 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Income Sources */}
-        <div className="bg-card border border-border rounded-xl p-5">
+        <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
           <h2 className="text-sm font-semibold mb-4">Income Sources</h2>
           {incomeSources.length === 0 ? (
-            <p className="text-muted-foreground text-sm">No income data</p>
+            <p className="text-muted-foreground text-sm py-10 text-center">No income data</p>
           ) : (
             <>
-              <ResponsiveContainer width="100%" height={180}>
-                <PieChart>
-                  <Pie
-                    data={incomeSources}
-                    dataKey="total"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={50}
-                    outerRadius={80}
-                    strokeWidth={0}
-                  >
-                    {incomeSources.map((entry, i) => (
-                      <Cell key={i} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(v: any) => chartFmt(v)} contentStyle={TOOLTIP_STYLE} />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="space-y-2 mt-2">
+              <div className="h-[180px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={incomeSources}
+                      dataKey="total"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={50}
+                      outerRadius={70}
+                      paddingAngle={2}
+                      strokeWidth={0}
+                    >
+                      {incomeSources.map((entry, i) => (
+                        <Cell key={i} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(v: any) => chartFmt(v)} contentStyle={TOOLTIP_STYLE} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="space-y-2 mt-4">
                 {incomeSources.map((src) => (
                   <div key={src.name} className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: src.color }} />
-                    <span className="text-xs flex-1 truncate">{src.icon} {src.name}</span>
-                    <span className="text-xs font-medium">{fmt(src.total)}</span>
+                    <span className="text-xs flex-1 truncate font-medium">{src.icon} {src.name}</span>
+                    <span className="text-xs font-semibold">{fmt(src.total)}</span>
                   </div>
                 ))}
               </div>
@@ -236,8 +255,8 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Biggest Expenses */}
-      <div className="bg-card border border-border rounded-xl overflow-hidden">
-        <div className="px-5 py-4 border-b border-border">
+      <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
+        <div className="px-5 py-4 border-b border-border bg-muted/30">
           <h2 className="text-sm font-semibold">Biggest Expenses</h2>
         </div>
         {biggestExpenses.length === 0 ? (
@@ -253,18 +272,18 @@ export default function AnalyticsPage() {
               }`}
             >
               <div
-                className="w-8 h-8 rounded-full flex items-center justify-center text-sm shrink-0"
-                style={{ backgroundColor: (tx.category?.color || "#ef4444") + "20" }}
+                className="w-9 h-9 rounded-full flex items-center justify-center text-base shrink-0"
+                style={{ backgroundColor: (tx.category?.color || "#ef4444") + "15" }}
               >
                 {tx.category?.icon || "💸"}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">
+                <p className="text-sm font-semibold truncate">
                   {tx.description || tx.category?.name || "Uncategorized"}
                 </p>
-                <p className="text-xs text-muted-foreground">{fmtDate(tx.date)}</p>
+                <p className="text-[11px] text-muted-foreground uppercase">{fmtDate(tx.date)}</p>
               </div>
-              <span className="text-sm font-semibold text-red-500">
+              <span className="text-sm font-bold text-red-500 whitespace-nowrap">
                 -{fmt(tx.amount)}
               </span>
             </div>
