@@ -2,8 +2,8 @@ import { auth } from "@/auth";
 import { connectDB } from "@/lib/db";
 import { User } from "@/lib/models/User";
 import { Transaction } from "@/lib/models/Transaction";
-import { Category } from "@/lib/models/Category"; // 👈 add this
-import { Budget } from "@/lib/models/Budget";     // 👈 add this
+import { Category } from "@/lib/models/Category";
+import { Budget } from "@/lib/models/Budget";
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
@@ -21,6 +21,25 @@ export async function GET() {
     const last30 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     const last7 = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
+    // Define conversion rates to USD globally for this function
+    const currencySwitch = {
+      $switch: {
+        branches: [
+          { case: { $eq: ["$user.currency", "USD"] }, then: 1 },
+          { case: { $eq: ["$user.currency", "EUR"] }, then: 1.08 },
+          { case: { $eq: ["$user.currency", "GBP"] }, then: 1.25 },
+          { case: { $eq: ["$user.currency", "NGN"] }, then: 0.0007 }, // Naira Fix
+          { case: { $eq: ["$user.currency", "GHS"] }, then: 0.076 },
+          { case: { $eq: ["$user.currency", "KES"] }, then: 0.0076 },
+          { case: { $eq: ["$user.currency", "ZAR"] }, then: 0.053 },
+          { case: { $eq: ["$user.currency", "CAD"] }, then: 0.73 },
+          { case: { $eq: ["$user.currency", "AUD"] }, then: 0.65 },
+          { case: { $eq: ["$user.currency", "INR"] }, then: 0.012 },
+        ],
+        default: 1
+      }
+    };
+
     const [
       totalUsers,
       newUsersThisMonth,
@@ -28,7 +47,7 @@ export async function GET() {
       totalTransactions,
       transactionsThisMonth,
       allUsers,
-      recentTransactions,
+      recentTransactionsData,
     ] = await Promise.all([
       User.countDocuments(),
       User.countDocuments({ createdAt: { $gte: startOfMonth } }),
@@ -36,9 +55,41 @@ export async function GET() {
       Transaction.countDocuments(),
       Transaction.countDocuments({ createdAt: { $gte: startOfMonth } }),
       User.find().sort({ createdAt: -1 }).limit(8).select("-password").lean(),
-      Transaction.find().sort({ createdAt: -1 }).limit(5)
-        .populate("userId", "name email")
-        .lean(),
+      // Refactored Transaction Fetching
+      Transaction.aggregate([
+        { $sort: { createdAt: -1 } },
+        { $limit: 10 },
+        {
+          $lookup: {
+            from: "users",
+            localField: "userId",
+            foreignField: "_id",
+            as: "user"
+          }
+        },
+        { $unwind: "$user" },
+        {
+          $addFields: {
+            rate: currencySwitch,
+          }
+        },
+        {
+          $project: {
+            _id: 1,
+            description: 1,
+            createdAt: 1,
+            type: 1,
+            // Multiply original amount by the rate to get USD
+            amount: { $multiply: ["$amount", "$rate"] },
+            userId: {
+              _id: "$user._id",
+              name: "$user.name",
+              email: "$user.email",
+              currency: "$user.currency"
+            }
+          }
+        }
+      ]),
     ]);
 
     // Users registered per day last 7 days
@@ -90,10 +141,9 @@ export async function GET() {
       users: monthlySignups.find((s) => s._id === i + 1)?.count || 0,
     }));
 
-    // Onboarding completion rate
     const completedOnboarding = await User.countDocuments({ onboardingComplete: true });
 
-    // Transaction volume (total $ processed) - converted to USD
+    // Transaction volume calculation using the shared switch logic
     const volumeResult = await Transaction.aggregate([
       {
         $lookup: {
@@ -103,28 +153,10 @@ export async function GET() {
           as: "user"
         }
       },
-      {
-        $unwind: { path: "$user", preserveNullAndEmptyArrays: true }
-      },
+      { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
       {
         $addFields: {
-          rate: {
-            $switch: {
-              branches: [
-                { case: { $eq: ["$user.currency", "USD"] }, then: 1 },
-                { case: { $eq: ["$user.currency", "EUR"] }, then: 1.08 },
-                { case: { $eq: ["$user.currency", "GBP"] }, then: 1.25 },
-                { case: { $eq: ["$user.currency", "NGN"] }, then: 0.0007 },
-                { case: { $eq: ["$user.currency", "GHS"] }, then: 0.076 },
-                { case: { $eq: ["$user.currency", "KES"] }, then: 0.0076 },
-                { case: { $eq: ["$user.currency", "ZAR"] }, then: 0.053 },
-                { case: { $eq: ["$user.currency", "CAD"] }, then: 0.73 },
-                { case: { $eq: ["$user.currency", "AUD"] }, then: 0.65 },
-                { case: { $eq: ["$user.currency", "INR"] }, then: 0.012 },
-              ],
-              default: 1
-            }
-          }
+          rate: currencySwitch
         }
       },
       {
@@ -134,6 +166,7 @@ export async function GET() {
         }
       }
     ]);
+    
     const totalVolume = volumeResult[0]?.total || 0;
 
     return NextResponse.json({
@@ -152,7 +185,7 @@ export async function GET() {
       txGrowth: txGrowth.map((d) => ({ date: d._id, transactions: d.count })),
       monthlySignups: monthlySignupsFormatted,
       recentUsers: allUsers,
-      recentTransactions,
+      recentTransactions: recentTransactionsData,
     });
   } catch (err) {
     console.error(err);
